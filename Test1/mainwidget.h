@@ -4,6 +4,7 @@
 #include <QWidget>
 
 class QHBoxLayout;
+class DirAnalyzer;
 
 class MainWidget : public QWidget
 {
@@ -16,9 +17,12 @@ signals:
 private slots:
     void setCurrentDirFromDialog();
     void setCurrentDir(const QString &dirPath);
+    void findSameFilesCount();
 private:
-    QHBoxLayout *makeChooseDirLayout() const;
+    QHBoxLayout *makeControlLayout() const;
     QString _currentChoosedDir;
+    DirAnalyzer *_dirAnalyzer{nullptr};
+    int countOfViewElemets = 10;
 };
 
 #endif // MAINWIDGET_H
