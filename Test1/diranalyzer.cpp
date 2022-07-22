@@ -1,7 +1,5 @@
 #include "diranalyzer.h"
 
-#include <QDebug>
-
 DirAnalyzer::DirAnalyzer()
 {
 

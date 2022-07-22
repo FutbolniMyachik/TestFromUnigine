@@ -5,6 +5,7 @@
 
 class QHBoxLayout;
 class DirAnalyzer;
+class QTableWidget;
 
 class MainWidget : public QWidget
 {
@@ -20,8 +21,13 @@ private slots:
     void findSameFilesCount();
 private:
     QHBoxLayout *makeControlLayout() const;
+    QTableWidget *makeTableWidget() const;
+    void updateTableWidget(const QList<QPair<QString, int>> &dataItems);
+    void fitTableForRowCount(const int rowCount);
+
     QString _currentChoosedDir;
     DirAnalyzer *_dirAnalyzer{nullptr};
+    QTableWidget *_tableWidget{nullptr};
     int countOfViewElemets = 10;
 };
 
