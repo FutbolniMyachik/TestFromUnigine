@@ -5,10 +5,11 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QLabel>
-
 #include <QFileDialog>
-
 #include <QTableWidget>
+
+#include <QFuture>
+#include <QtConcurrent/QtConcurrent>
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget{parent}
@@ -38,7 +39,16 @@ void MainWidget::setCurrentDir(const QString &dirPath)
 
 void MainWidget::findSameFilesCount()
 {
-    const QMap<QString, int> countOfTheSameNames = _dirAnalyzer->getCountOfTheSameNames(_currentChoosedDir);
+    QMap<QString, int> countOfTheSameNames;
+    QFutureWatcher<void> watcher;
+    QFuture<void> future = QtConcurrent::run([this, &countOfTheSameNames]() {
+        countOfTheSameNames = _dirAnalyzer->getCountOfTheSameNames(_currentChoosedDir);
+    });
+    watcher.setFuture(future);
+    QEventLoop eventLoop;
+    connect(&watcher, &QFutureWatcher<void>::finished, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);
+    eventLoop.exec();
+
     QList<QPair<QString, int>>  result = _dirAnalyzer->getMostCommon(countOfViewElemets, countOfTheSameNames);
     updateTableWidget(result);
 }
