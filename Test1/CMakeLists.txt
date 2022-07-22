@@ -14,9 +14,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
-set(PROJECT_SOURCES
-        main.cpp)
+file(GLOB SOURCES *.h *.cpp)
 
-add_executable(Test1 ${PROJECT_SOURCES})
+add_executable(Test1 ${SOURCES})
 
 target_link_libraries(Test1 PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
