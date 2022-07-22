@@ -15,11 +15,10 @@ QList<QPair<QString, int>> DirAnalyzer::getMostCommon(const int count, const QMa
     });
     int resultSize = std::min(count, sourceValues.size());
     QList<QPair<QString, int> > listOfMostCommon;
-//    listOfMostCommon.reserve(resultSize);
+    listOfMostCommon.reserve(resultSize);
     auto currentElement = listOfResult.begin();
-    for (int i = 0; i < count; ++i) {
+    for (int i = 0; i < resultSize; ++i) {
         listOfMostCommon.append({currentElement->first, currentElement->second});
-//        listOfMostCommon[i] = {currentElement->first, currentElement->second};
         ++currentElement;
     }
     return listOfMostCommon;
@@ -52,11 +51,10 @@ void DirAnalyzer::getCountOfTheSameNamesInternal(const QString &startDir)
 QList<QPair<QString, int>> DirAnalyzer::toList(const QMap<QString, int> &sourceValues) const
 {
     QList<QPair<QString, int>> result;
-//    result.reserve(sourceValues.size());
+    result.reserve(sourceValues.size());
     int i = 0;
     for (const QString &name : sourceValues.keys()) {
         result.append({name, sourceValues.value(name)});
-//        result[i] = {name, sourceValues.value(name)};
         ++i;
     }
     return result;
