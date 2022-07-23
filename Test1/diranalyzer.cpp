@@ -30,27 +30,19 @@ QList<QPair<QString, int>> DirAnalyzer::getMostCommon(const int count, const QMa
 
 QMap<QString, int> DirAnalyzer::getCountOfTheSameNames(const QString &startDir)
 {
-    QElapsedTimer timer;
-    timer.start();
-    incrementFileRepeatCount(QFileInfo(startDir).fileName());
-    checkDirAsync(startDir);
-    //getCountOfTheSameNamesInternal(startDir);
+    _interrupt = false;
+    for (const QFileInfo &file : QDir(startDir).entryInfoList()) {
+        checkDirAsync(file.filePath());
+    }
     _threads->waitForDone();
     const QMap<QString, int> result = std::move(_result);
-    clear();
-    qInfo() << timer.elapsed();
+    _result.clear();
     return result;
 }
 
 void DirAnalyzer::setThreadCount(const int threadCount)
 {
     _threads->setMaxThreadCount(threadCount);
-}
-
-void DirAnalyzer::clear()
-{
-    _result.clear();
-    _interrupt = false;
 }
 
 void DirAnalyzer::incrementFileRepeatCount(const QString &fileName)
@@ -73,20 +65,18 @@ void DirAnalyzer::interrupt()
     _interrupt = true;
 }
 
-bool DirAnalyzer::isValidDir(const QString &dirPath) const
+bool DirAnalyzer::isValidElement(const QString &dirPath) const
 {
-    const QDir dir(dirPath);
-    return dir.exists() && !dir.dirName().startsWith('.');
+    const QFileInfo fileInfo(dirPath);
+    return fileInfo.exists() && !fileInfo.fileName().startsWith('.');
 }
 
 void DirAnalyzer::getCountOfTheSameNamesInternal(const QString &startDir)
 {
-
-    if (!isValidDir(startDir))
+    if (!isValidElement(startDir))
         return;
+    incrementFileRepeatCount(QFileInfo(startDir).fileName());
     for (const QFileInfo &file : QDir(startDir).entryInfoList()) {
-        incrementFileRepeatCount(file.fileName());
-        //getCountOfTheSameNamesInternal(file.filePath());
         checkDirAsync(file.filePath());
     }
 }

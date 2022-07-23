@@ -25,7 +25,7 @@ private:
     void makeGui();
     QHBoxLayout *makeControlLayout() const;
     QTableWidget *makeTableWidget() const;
-    QProgressDialog *makeProgressDialog();
+    void configureProgressDialog(QProgressDialog *progressDialog);
     void updateTableWidget(const QList<QPair<QString, int>> &dataItems);
 
     QString _currentChoosedDir;

@@ -22,7 +22,7 @@ private:
     void clear();
     void incrementFileRepeatCount(const QString &fileName);
     void checkDirAsync(const QString &dirPath);
-    bool isValidDir(const QString &dirPath) const;
+    bool isValidElement(const QString &dirPath) const;
     void getCountOfTheSameNamesInternal(const QString &startDir);
     QList<QPair<QString, int>> toList(const QMap<QString, int> &sourceValues) const;
     QMap<QString, int> _result;

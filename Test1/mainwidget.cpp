@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QFileDialog>
 #include <QTableWidget>
+#include <QHeaderView>
 #include <QProgressDialog>
 
 #include <QFuture>
@@ -33,7 +34,7 @@ void MainWidget::setCurrentDirFromDialog()
 
 void MainWidget::setCurrentDir(const QString &dirPath)
 {
-    if (!QDir(dirPath).exists())
+    if (!QDir(dirPath).exists() || (_currentChoosedDir == dirPath))
         return;
     _currentChoosedDir = dirPath;
     _settings->setValue("currentDir", _currentChoosedDir);
@@ -43,8 +44,9 @@ void MainWidget::setCurrentDir(const QString &dirPath)
 void MainWidget::findSameFilesCount()
 {
 
-    QPointer<QProgressDialog> progressDialog = makeProgressDialog();
-    progressDialog->show();
+    QProgressDialog progressDialog(this);
+    configureProgressDialog(&progressDialog);
+    progressDialog.show();
 
     QFutureWatcher<QMap<QString, int>> watcher;
     QFuture<QMap<QString, int>> future = QtConcurrent::run(std::bind(&DirAnalyzer::getCountOfTheSameNames, _dirAnalyzer, _currentChoosedDir));
@@ -53,7 +55,8 @@ void MainWidget::findSameFilesCount()
     connect(&watcher, &QFutureWatcher<QMap<QString, int>>::finished, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);
     eventLoop.exec();
 
-    const QMap<QString, int> countOfTheSameNames = future.result()/*_dirAnalyzer->getCountOfTheSameNames(_currentChoosedDir)*/;
+    const QMap<QString, int> countOfTheSameNames = future.result();
+    progressDialog.setLabelText(tr("Поиск максимальных значений"));
     const QList<QPair<QString, int>>  result = _dirAnalyzer->getMostCommon(countOfViewElemets, countOfTheSameNames);
     updateTableWidget(result);
 }
@@ -65,6 +68,7 @@ void MainWidget::makeGui()
     _tableWidget = makeTableWidget();
     mainLayout->addWidget(_tableWidget);
     setLayout(mainLayout);
+    setMinimumSize(400, 400);
 }
 
 QHBoxLayout *MainWidget::makeControlLayout() const
@@ -75,6 +79,7 @@ QHBoxLayout *MainWidget::makeControlLayout() const
     layout->addWidget(currentChoosedDirLabel);
     const auto makeButton = [this, layout](const QString &title, const auto &slot) {
        QPushButton *button = new QPushButton(title);
+       button->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
        connect(button, &QPushButton::clicked, this, slot);
        layout->addWidget(button);
     };
@@ -89,23 +94,26 @@ QTableWidget *MainWidget::makeTableWidget() const
     QTableWidget *tableWidget = new QTableWidget;
     tableWidget->setColumnCount(2);
     tableWidget->setHorizontalHeaderLabels({tr("Имя"), tr("Количество повторений")});
+    tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     return tableWidget;
 }
 
-QProgressDialog *MainWidget::makeProgressDialog()
+void MainWidget::configureProgressDialog(QProgressDialog *progressDialog)
 {
-    QProgressDialog *progressDialog = new QProgressDialog(this);
     progressDialog->setLabelText(tr("Расчет"));
+    progressDialog->setWindowTitle(tr("Расчет"));
     progressDialog->setMaximum(0);
     connect(progressDialog, &QProgressDialog::canceled, _dirAnalyzer, &DirAnalyzer::interrupt);
-    return progressDialog;
+    connect(progressDialog, &QProgressDialog::canceled, progressDialog, [progressDialog]() {
+        progressDialog->setLabelText(tr("Остановка"));
+    });
 }
 
 void MainWidget::updateTableWidget(const QList<QPair<QString, int> > &dataItems)
 {
     _tableWidget->clearContents();
     const int rowCount = dataItems.size();
-    _tableWidget->setRowCount(dataItems.size());
+    _tableWidget->setRowCount(rowCount);
     for (int currentRow = 0; currentRow < rowCount; ++currentRow) {
         const QPair<QString, int> &dataItem = dataItems[currentRow];
         _tableWidget->setItem(currentRow, 0, new QTableWidgetItem(dataItem.first));
