@@ -36,8 +36,12 @@ QMap<QString, int> DirAnalyzer::getCountOfTheSameNames(const QString &startDir)
         checkDirAsync(file.filePath());
     }
     _threads->waitForDone();
-    const QMap<QString, int> result = std::move(_result);
-    _result.clear();
+    if (_interrupt) {
+        _result.clear();
+        return {};
+    }
+    QMap<QString, int> result;
+    std::swap(result, _result);
     return result;
 }
 
