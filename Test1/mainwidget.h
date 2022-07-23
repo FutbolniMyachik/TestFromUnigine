@@ -4,6 +4,7 @@
 #include <QWidget>
 
 class QHBoxLayout;
+class QVBoxLayout;
 class DirAnalyzer;
 class QTableWidget;
 class QProgressDialog;
@@ -22,8 +23,10 @@ private slots:
     void setCurrentDir(const QString &dirPath);
     void findSameFilesCount();
 private:
+    int maxThreadCount() const;
     void makeGui();
     QHBoxLayout *makeControlLayout() const;
+    QVBoxLayout *makeChooseThreadCountLayout() const;
     QTableWidget *makeTableWidget() const;
     void configureProgressDialog(QProgressDialog *progressDialog);
     void updateTableWidget(const QList<QPair<QString, int>> &dataItems);

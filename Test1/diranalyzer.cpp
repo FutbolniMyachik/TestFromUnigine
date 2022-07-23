@@ -9,6 +9,7 @@
 DirAnalyzer::DirAnalyzer(QObject *parent) : QObject(parent)
 {
     _threads = new QThreadPool(this);
+    _threads->setMaxThreadCount(1);
 }
 
 QList<QPair<QString, int>> DirAnalyzer::getMostCommon(const int count, const QMap<QString, int> &sourceValues) const
@@ -42,7 +43,15 @@ QMap<QString, int> DirAnalyzer::getCountOfTheSameNames(const QString &startDir)
 
 void DirAnalyzer::setThreadCount(const int threadCount)
 {
+    if ((threadCount == this->threadCount()) || (threadCount < 1))
+        return;
     _threads->setMaxThreadCount(threadCount);
+    emit threadCountChanged(threadCount);
+}
+
+int DirAnalyzer::threadCount() const
+{
+    return _threads->maxThreadCount();
 }
 
 void DirAnalyzer::incrementFileRepeatCount(const QString &fileName)

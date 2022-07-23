@@ -9,6 +9,7 @@
 #include <QTableWidget>
 #include <QHeaderView>
 #include <QProgressDialog>
+#include <QComboBox>
 
 #include <QFuture>
 #include <QtConcurrent/QtConcurrent>
@@ -17,7 +18,6 @@ MainWidget::MainWidget(QWidget *parent)
     : QWidget{parent}
 {
     _dirAnalyzer = new DirAnalyzer(this);
-    _dirAnalyzer->setThreadCount(QThread::idealThreadCount() - 1); // Один поток для GUI
     _settings = new QSettings("settings.ini", QSettings::IniFormat, this);
 
     makeGui();
@@ -61,6 +61,11 @@ void MainWidget::findSameFilesCount()
     updateTableWidget(result);
 }
 
+int MainWidget::maxThreadCount() const
+{
+    return QThread::idealThreadCount() - 1; // Один поток для GUI
+}
+
 void MainWidget::makeGui()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
@@ -85,7 +90,27 @@ QHBoxLayout *MainWidget::makeControlLayout() const
     };
     makeButton(tr("Выбрать директорию"), &MainWidget::setCurrentDirFromDialog);
     makeButton(tr("Поиск совпадений"), &MainWidget::findSameFilesCount);
+    layout->addLayout(makeChooseThreadCountLayout());
+    return layout;
+}
 
+QVBoxLayout *MainWidget::makeChooseThreadCountLayout() const
+{
+    QVBoxLayout *layout = new QVBoxLayout;
+    QComboBox *numberOfThreadComboBox = new QComboBox;
+    for (int i = 1, itemCount = maxThreadCount(); i <= itemCount; ++i) {
+        numberOfThreadComboBox->addItem(QString::number(i));
+    }
+    connect(numberOfThreadComboBox, qOverload<int>(&QComboBox::currentIndexChanged),
+            _dirAnalyzer, [this](const int currentIndex) {
+        _dirAnalyzer->setThreadCount(currentIndex + 1);
+    });
+    connect(_dirAnalyzer, &DirAnalyzer::threadCountChanged, numberOfThreadComboBox, [numberOfThreadComboBox](const int threadCount) {
+        numberOfThreadComboBox->setCurrentIndex(threadCount - 1);
+    });
+    numberOfThreadComboBox->setCurrentIndex(_dirAnalyzer->threadCount() - 1);
+    layout->addWidget(new QLabel(tr("Число потоков")));
+    layout->addWidget(numberOfThreadComboBox);
     return layout;
 }
 

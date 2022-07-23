@@ -16,6 +16,9 @@ public:
     QList<QPair<QString, int>> getMostCommon(const int count, const QMap<QString, int> &sourceValues) const;
     QMap<QString, int> getCountOfTheSameNames(const QString &startDir);
     void setThreadCount(const int threadCount);
+    int threadCount() const;
+signals:
+    void threadCountChanged(int threadCount);
 public slots:
     void interrupt();
 private:
