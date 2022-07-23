@@ -10,6 +10,7 @@
 #include <QHeaderView>
 #include <QProgressDialog>
 #include <QComboBox>
+#include <QMessageBox>
 
 #include <QFuture>
 #include <QtConcurrent/QtConcurrent>
@@ -48,6 +49,8 @@ void MainWidget::findSameFilesCount()
     configureProgressDialog(&progressDialog);
     progressDialog.show();
 
+    QElapsedTimer timer;
+    timer.start();
     QFutureWatcher<QMap<QString, int>> watcher;
     QFuture<QMap<QString, int>> future = QtConcurrent::run(std::bind(&DirAnalyzer::getCountOfTheSameNames, _dirAnalyzer, _currentChoosedDir));
     watcher.setFuture(future);
@@ -59,6 +62,7 @@ void MainWidget::findSameFilesCount()
     progressDialog.setLabelText(tr("Поиск максимальных значений"));
     const QList<QPair<QString, int>>  result = _dirAnalyzer->getMostCommon(countOfViewElemets, countOfTheSameNames);
     updateTableWidget(result);
+    QMessageBox::information(this, tr("Время расчета"), QTime(0, 0, 0).addMSecs(timer.elapsed()).toString("hh:mm:ss.zzz"));
 }
 
 int MainWidget::maxThreadCount() const
