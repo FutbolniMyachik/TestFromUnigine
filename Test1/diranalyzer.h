@@ -6,6 +6,8 @@
 #include <QString>
 #include <QDir>
 
+#include <QMutex>
+
 class QThreadPool;
 
 class DirAnalyzer : public QObject
@@ -31,6 +33,7 @@ private:
     QMap<QString, int> _result;
     QThreadPool *_threads{nullptr};
     bool _interrupt{false};
+    QMutex _mutex;
 };
 
 #endif // DIRANALYZER_H

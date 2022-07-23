@@ -1,10 +1,6 @@
 #include "diranalyzer.h"
 
 #include <QThreadPool>
-#include <QMutex>
-
-#include <QElapsedTimer>
-#include <QDebug>
 
 DirAnalyzer::DirAnalyzer(QObject *parent) : QObject(parent)
 {
@@ -36,10 +32,6 @@ QMap<QString, int> DirAnalyzer::getCountOfTheSameNames(const QString &startDir)
         checkDirAsync(file.filePath());
     }
     _threads->waitForDone();
-    if (_interrupt) {
-        _result.clear();
-        return {};
-    }
     QMap<QString, int> result;
     std::swap(result, _result);
     return result;
@@ -60,10 +52,9 @@ int DirAnalyzer::threadCount() const
 
 void DirAnalyzer::incrementFileRepeatCount(const QString &fileName)
 {
-    QMutex mutex;
-    mutex.lock();
+    _mutex.lock();
     ++_result[fileName];
-    mutex.unlock();
+    _mutex.unlock();
 }
 
 void DirAnalyzer::checkDirAsync(const QString &dirPath)
