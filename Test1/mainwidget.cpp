@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QFileDialog>
 #include <QTableWidget>
+#include <QProgressDialog>
 
 #include <QFuture>
 #include <QtConcurrent/QtConcurrent>
@@ -15,7 +16,7 @@ MainWidget::MainWidget(QWidget *parent)
     : QWidget{parent}
 {
     _dirAnalyzer = new DirAnalyzer;
-
+    _dirAnalyzer->setThreadCount(QThread::idealThreadCount() - 1); // Один поток для GUI
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addLayout(makeControlLayout());
     _tableWidget = makeTableWidget();
@@ -39,17 +40,21 @@ void MainWidget::setCurrentDir(const QString &dirPath)
 
 void MainWidget::findSameFilesCount()
 {
-    QMap<QString, int> countOfTheSameNames;
-    QFutureWatcher<void> watcher;
-    QFuture<void> future = QtConcurrent::run([this, &countOfTheSameNames]() {
-        countOfTheSameNames = _dirAnalyzer->getCountOfTheSameNames(_currentChoosedDir);
-    });
+    QProgressDialog progressDialog(this);
+    progressDialog.setLabelText(tr("Расчет"));
+    progressDialog.setMaximum(0);
+    progressDialog.show();
+    connect(&progressDialog, &QProgressDialog::canceled, _dirAnalyzer, &DirAnalyzer::interrupt);
+
+    QFutureWatcher<QMap<QString, int>> watcher;
+    QFuture<QMap<QString, int>> future = QtConcurrent::run(std::bind(&DirAnalyzer::getCountOfTheSameNames, _dirAnalyzer, _currentChoosedDir));
     watcher.setFuture(future);
     QEventLoop eventLoop;
-    connect(&watcher, &QFutureWatcher<void>::finished, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);
+    connect(&watcher, &QFutureWatcher<QMap<QString, int>>::finished, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);
     eventLoop.exec();
 
-    QList<QPair<QString, int>>  result = _dirAnalyzer->getMostCommon(countOfViewElemets, countOfTheSameNames);
+    const QMap<QString, int> countOfTheSameNames = future.result()/*_dirAnalyzer->getCountOfTheSameNames(_currentChoosedDir)*/;
+    const QList<QPair<QString, int>>  result = _dirAnalyzer->getMostCommon(countOfViewElemets, countOfTheSameNames);
     updateTableWidget(result);
 }
 
@@ -78,29 +83,12 @@ QTableWidget *MainWidget::makeTableWidget() const
 
 void MainWidget::updateTableWidget(const QList<QPair<QString, int> > &dataItems)
 {
+    _tableWidget->clearContents();
     const int rowCount = dataItems.size();
-    fitTableForRowCount(rowCount);
-    const int rowCountAlreadyExists = _tableWidget->rowCount();
-    int currentRow = 0;
-    for (; currentRow < rowCountAlreadyExists; ++currentRow) {
+    _tableWidget->setRowCount(dataItems.size());
+    for (int currentRow = 0; currentRow < rowCount; ++currentRow) {
         const QPair<QString, int> &dataItem = dataItems[currentRow];
-        _tableWidget->itemAt(currentRow, 0)->setText(dataItem.first);
-        _tableWidget->itemAt(currentRow, 0)->setText(QString::number(dataItem.second));
-    }
-    for (; currentRow < rowCount; ++currentRow) {
-        const QPair<QString, int> &dataItem = dataItems[currentRow];
-        _tableWidget->insertRow(currentRow);
         _tableWidget->setItem(currentRow, 0, new QTableWidgetItem(dataItem.first));
         _tableWidget->setItem(currentRow, 1, new QTableWidgetItem(QString::number(dataItem.second)));
-    }
-}
-
-void MainWidget::fitTableForRowCount(const int rowCount)
-{
-    int  rowCountAlreadyExists = _tableWidget->rowCount();
-    if (rowCountAlreadyExists <= rowCount)
-        return;
-    for (; rowCountAlreadyExists > rowCount; --rowCountAlreadyExists) {
-        _tableWidget->removeRow(rowCountAlreadyExists);
     }
 }

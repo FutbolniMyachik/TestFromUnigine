@@ -1,8 +1,14 @@
 #include "diranalyzer.h"
 
-DirAnalyzer::DirAnalyzer()
-{
+#include <QThreadPool>
+#include <QMutex>
 
+#include <QElapsedTimer>
+#include <QDebug>
+
+DirAnalyzer::DirAnalyzer(QObject *parent) : QObject(parent)
+{
+    _threads = new QThreadPool(this);
 }
 
 QList<QPair<QString, int>> DirAnalyzer::getMostCommon(const int count, const QMap<QString, int> &sourceValues) const
@@ -24,9 +30,47 @@ QList<QPair<QString, int>> DirAnalyzer::getMostCommon(const int count, const QMa
 
 QMap<QString, int> DirAnalyzer::getCountOfTheSameNames(const QString &startDir)
 {
-    ++_result[QFileInfo(startDir).fileName()];
-    getCountOfTheSameNamesInternal(startDir);
-    return _result;
+    QElapsedTimer timer;
+    timer.start();
+    incrementFileRepeatCount(QFileInfo(startDir).fileName());
+    checkDirAsync(startDir);
+    //getCountOfTheSameNamesInternal(startDir);
+    _threads->waitForDone();
+    QMap<QString, int> result = std::move(_result);
+    clear();
+    qInfo() << timer.elapsed();
+    return result;
+}
+
+void DirAnalyzer::setThreadCount(const int threadCount)
+{
+    _threads->setMaxThreadCount(threadCount);
+}
+
+void DirAnalyzer::clear()
+{
+    _result.clear();
+    _interrupt = false;
+}
+
+void DirAnalyzer::incrementFileRepeatCount(const QString &fileName)
+{
+    QMutex mutex;
+    mutex.lock();
+    ++_result[fileName];
+    mutex.unlock();
+}
+
+void DirAnalyzer::checkDirAsync(const QString &dirPath)
+{
+    if (_interrupt)
+        return;
+    _threads->start(std::bind(&DirAnalyzer::getCountOfTheSameNamesInternal, this, dirPath));
+}
+
+void DirAnalyzer::interrupt()
+{
+    _interrupt = true;
 }
 
 bool DirAnalyzer::isValidDir(const QString &dirPath) const
@@ -41,8 +85,9 @@ void DirAnalyzer::getCountOfTheSameNamesInternal(const QString &startDir)
     if (!isValidDir(startDir))
         return;
     for (const QFileInfo &file : QDir(startDir).entryInfoList()) {
-        ++_result[file.fileName()];
-        getCountOfTheSameNamesInternal(file.filePath());
+        incrementFileRepeatCount(file.fileName());
+        //getCountOfTheSameNamesInternal(file.filePath());
+        checkDirAsync(file.filePath());
     }
 }
 

@@ -23,7 +23,6 @@ private:
     QHBoxLayout *makeControlLayout() const;
     QTableWidget *makeTableWidget() const;
     void updateTableWidget(const QList<QPair<QString, int>> &dataItems);
-    void fitTableForRowCount(const int rowCount);
 
     QString _currentChoosedDir;
     DirAnalyzer *_dirAnalyzer{nullptr};
