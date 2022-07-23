@@ -36,7 +36,7 @@ QMap<QString, int> DirAnalyzer::getCountOfTheSameNames(const QString &startDir)
     checkDirAsync(startDir);
     //getCountOfTheSameNamesInternal(startDir);
     _threads->waitForDone();
-    QMap<QString, int> result = std::move(_result);
+    const QMap<QString, int> result = std::move(_result);
     clear();
     qInfo() << timer.elapsed();
     return result;

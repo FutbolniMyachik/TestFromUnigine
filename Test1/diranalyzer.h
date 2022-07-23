@@ -12,7 +12,7 @@ class DirAnalyzer : public QObject
 {
     Q_OBJECT
 public:
-    DirAnalyzer(QObject *parent = nullptr);
+    explicit DirAnalyzer(QObject *parent = nullptr);
     QList<QPair<QString, int>> getMostCommon(const int count, const QMap<QString, int> &sourceValues) const;
     QMap<QString, int> getCountOfTheSameNames(const QString &startDir);
     void setThreadCount(const int threadCount);
@@ -20,7 +20,6 @@ public slots:
     void interrupt();
 private:
     void clear();
-    void prepareForCheckingDirs();
     void incrementFileRepeatCount(const QString &fileName);
     void checkDirAsync(const QString &dirPath);
     bool isValidDir(const QString &dirPath) const;
