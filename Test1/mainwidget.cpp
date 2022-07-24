@@ -148,8 +148,9 @@ void MainWidget::configureProgressDialog(QProgressDialog *progressDialog)
     progressDialog->setWindowTitle(tr("Поиск совпадений"));
     progressDialog->setMaximum(0); // Количество шагов не определяется, поэтому бесконечный прогресс бар
     connect(progressDialog, &QProgressDialog::canceled, _dirInfoCollector, &DirInfoCollector::interrupt);
-    connect(progressDialog, &QProgressDialog::canceled, progressDialog, [progressDialog]() {
+    connect(progressDialog, &QProgressDialog::canceled, progressDialog, [progressDialog, this]() {
         progressDialog->setLabelText(tr("Остановка"));
+        _interrupted = true;
     });
 }
 
