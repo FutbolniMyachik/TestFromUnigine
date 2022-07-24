@@ -47,18 +47,19 @@ void MainWidget::setCurrentDir(const QString &dirPath)
 
 void MainWidget::findMostCommonFileAndDirNames()
 {
+    _interrupted = false;
     QProgressDialog progressDialog(this);
     configureProgressDialog(&progressDialog);
     progressDialog.show();
 
     QElapsedTimer timer;
     timer.start();
-    const QString &handleDir = _currentChoosedDir;
+    const QString handleDir = _currentChoosedDir;
     const QMap<QString, int> dirInfo = collectDirInfoInSeparateThread();
     progressDialog.setLabelText(tr("Поиск максимальных значений"));
     updateTableWidget(DirInfoAnalyzer(dirInfo).getMostCommonNamesList(_countOfTableViewElemets));
     progressDialog.hide();
-    emit handledDir(handleDir);
+    emit handledDir(_interrupted ? handleDir : "");
     QMessageBox::information(this, tr("Время расчета"),
                              QTime(0, 0, 0).addMSecs(timer.elapsed()).toString("hh:mm:ss.zzz"));
 }
