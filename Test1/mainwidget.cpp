@@ -1,6 +1,7 @@
 #include "mainwidget.h"
 
 #include "dirinfocollector.h"
+#include "dirinfoanalyzer.h"
 
 #include <QVBoxLayout>
 #include <QPushButton>
@@ -53,7 +54,7 @@ void MainWidget::findMostCommonFileAndDirNames()
     timer.start();
     const QMap<QString, int> dirInfo = collectDirInfoInSeparateThread();
     progressDialog.setLabelText(tr("Поиск максимальных значений"));
-    const QList<QPair<QString, int>>  result = _dirInfoCollector->getMostCommon(_countOfTableViewElemets, dirInfo);
+    const QList<QPair<QString, int>> result = DirInfoAnalyzer(dirInfo).getMostCommonNamesList(_countOfTableViewElemets);
     updateTableWidget(result);
     progressDialog.hide();
     QMessageBox::information(this, tr("Время расчета"), QTime(0, 0, 0).addMSecs(timer.elapsed()).toString("hh:mm:ss.zzz"));

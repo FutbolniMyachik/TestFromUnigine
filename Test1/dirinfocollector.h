@@ -18,7 +18,6 @@ class DirInfoCollector : public QObject
     Q_OBJECT
 public:
     explicit DirInfoCollector(QObject *parent = nullptr);
-    QList<QPair<QString, int>> getMostCommon(const int count, const QMap<QString, int> &sourceValues) const;
     ///
     /// \brief collectDitInfo Сбрать информацию о директории
     /// \param dirPath Путь до директории
@@ -77,7 +76,7 @@ private:
     ///  отсутствием обработки результата, наличием обработки директории по пути dirPath
     ///
     void collectDitInfoInternal(const QString &dirPath);
-    QList<QPair<QString, int>> toList(const QMap<QString, int> &sourceValues) const;
+
     QMap<QString, int> _dirInfoMap; ///< Дерево хранящее информацию о директориях
     QThreadPool *_threads{nullptr}; ///< Потоки
     bool _interrupt{false}; ///< Флаг прерывания сбора информации

@@ -10,6 +10,9 @@ class QTableWidget;
 class QProgressDialog;
 class QSettings;
 
+///
+/// \brief The Класс главного виджета
+///
 class MainWidget : public QWidget
 {
     Q_OBJECT
