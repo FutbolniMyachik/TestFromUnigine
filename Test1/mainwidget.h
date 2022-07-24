@@ -25,6 +25,11 @@ signals:
     /// \param currentDir Текущая директория
     ///
     void currentDirChanged(const QString &currentDir);
+    ///
+    /// \brief handledDir Сигнал, увдомляющий об успешной обработке директории
+    /// \param dirPath Путь до директории
+    ///
+    void handledDir(const QString &dirPath);
 private slots:
     ///
     /// \brief setCurrentDirFromDialog Установить текущую директорию из диалога с пользователем
@@ -54,6 +59,7 @@ private:
     /// \return
     ///
     QHBoxLayout *makeControlLayout() const;
+    QVBoxLayout *makeDirLabelsLayout() const;
     ///
     /// \brief makeChooseThreadCountLayout Создать панель для управлением числом потоков
     /// \return

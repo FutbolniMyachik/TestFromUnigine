@@ -47,17 +47,18 @@ void MainWidget::setCurrentDir(const QString &dirPath)
 
 void MainWidget::findMostCommonFileAndDirNames()
 {
-
     QProgressDialog progressDialog(this);
     configureProgressDialog(&progressDialog);
     progressDialog.show();
 
     QElapsedTimer timer;
     timer.start();
+    const QString &handleDir = _currentChoosedDir;
     const QMap<QString, int> dirInfo = collectDirInfoInSeparateThread();
     progressDialog.setLabelText(tr("Поиск максимальных значений"));
     updateTableWidget(DirInfoAnalyzer(dirInfo).getMostCommonNamesList(_countOfTableViewElemets));
     progressDialog.hide();
+    emit handledDir(handleDir);
     QMessageBox::information(this, tr("Время расчета"),
                              QTime(0, 0, 0).addMSecs(timer.elapsed()).toString("hh:mm:ss.zzz"));
 }
@@ -80,20 +81,32 @@ void MainWidget::makeGui()
 QHBoxLayout *MainWidget::makeControlLayout() const
 {
     QHBoxLayout *layout = new QHBoxLayout();
+    layout->addLayout(makeDirLabelsLayout());
 
-    QLabel *currentChoosedDirLabel = new QLabel;
-    connect(this, &MainWidget::currentDirChanged, currentChoosedDirLabel, &QLabel::setText);
-    layout->addWidget(currentChoosedDirLabel);
-
-    const auto makeButton = [this, layout](const QString &title, const auto &slot) {
+    const auto addButton = [this, layout](const QString &title, const auto &slot) {
        QPushButton *button = new QPushButton(title);
        button->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
        connect(button, &QPushButton::clicked, this, slot);
        layout->addWidget(button);
     };
-    makeButton(tr("Выбрать директорию"), &MainWidget::setCurrentDirFromDialog);
-    makeButton(tr("Поиск совпадений"), &MainWidget::findMostCommonFileAndDirNames);
+    addButton(tr("Выбрать директорию"), &MainWidget::setCurrentDirFromDialog);
+    addButton(tr("Поиск совпадений"), &MainWidget::findMostCommonFileAndDirNames);
     layout->addLayout(makeChooseThreadCountLayout());
+    return layout;
+}
+
+QVBoxLayout *MainWidget::makeDirLabelsLayout() const
+{
+    QVBoxLayout *layout = new QVBoxLayout;
+    const auto addLabel = [this, layout](const QString &title, const auto &updateSignal) {
+        QLabel *label = new QLabel;
+        layout->addWidget(new QLabel(title));
+        label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+        connect(this, updateSignal, label, &QLabel::setText);
+        layout->addWidget(label);
+    };
+    addLabel(tr("Текущая выбранная директория"), &MainWidget::currentDirChanged);
+    addLabel(tr("Последняя отображенная директория"), &MainWidget::handledDir);
     return layout;
 }
 
