@@ -56,18 +56,22 @@ private:
     void makeGui();
     ///
     /// \brief makeControlLayout Создать панель для управления
-    /// \return
+    /// \return Панелья для управления
     ///
     QHBoxLayout *makeControlLayout() const;
+    ///
+    /// \brief makeDirLabelsLayout Создать панель для отображения информации об директориях
+    /// \return Панелья для отображения информации об директориях
+    ///
     QVBoxLayout *makeDirLabelsLayout() const;
     ///
     /// \brief makeChooseThreadCountLayout Создать панель для управлением числом потоков
-    /// \return
+    /// \return Панель для управления числом потоков
     ///
     QVBoxLayout *makeChooseThreadCountLayout() const;
     ///
     /// \brief makeTableWidget Создать виджет для отображения информации о файлах в виде таблицы
-    /// \return
+    /// \return Виджет для отображения информации о файлах в виде таблицы
     ///
     QTableWidget *makeTableWidget() const;
     ///
