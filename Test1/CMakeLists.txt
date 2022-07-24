@@ -12,18 +12,15 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY Build)
-set(CMAKE)
-set(QT_DEPENDS Widgets Concurrent)
-find_package(QT NAMES Qt6 Qt5 COMPONENTS ${QT_DEPENDS} REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS ${QT_DEPENDS} REQUIRED)
 
-#foreach(QT_DEPEND ${QT_DEPENDS})
-#    file(COPY ${CMAKE_PREFIX_PATH}/lib/x86_64-linux-gnu/libQt${QT_VERSION_MAJOR}${QT_DEPEND}.so.
-#        DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-#endforeach()
+set(QT_DEPENDS Widgets Core)
+find_package(QT NAMES Qt5 COMPONENTS ${QT_DEPENDS} REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS ${QT_DEPENDS} REQUIRED)
 
 file(GLOB SOURCES *.h *.cpp)
 
 add_executable(Test1 ${SOURCES})
 
-target_link_libraries(Test1 PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+foreach(QT_DEPEND ${QT_DEPENDS})
+    target_link_libraries(Test1 PRIVATE Qt${QT_VERSION_MAJOR}::${QT_DEPEND})
+endforeach()

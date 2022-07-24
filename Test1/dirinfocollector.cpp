@@ -8,10 +8,11 @@ DirInfoCollector::DirInfoCollector(QObject *parent) : QObject(parent)
     _threads->setMaxThreadCount(1);
 }
 
-QMap<QString, int> DirInfoCollector::collectDitInfo(const QString &dirPath)
+QMap<QString, int> DirInfoCollector::collectDirInfo(const QString &dirPath)
 {
     _interrupt = false;
-    for (const QFileInfo &file : QDir(dirPath).entryInfoList()) {
+    const QFileInfoList filesAndDirsNames = QDir(dirPath).entryInfoList();
+    for (const QFileInfo &file : filesAndDirsNames) {
         handleDirInSeparateThread(file.filePath());
     }
     _threads->waitForDone();
@@ -48,7 +49,7 @@ void DirInfoCollector::handleDirInSeparateThread(const QString &dirPath)
 {
     if (_interrupt)
         return;
-    _threads->start(std::bind(&DirInfoCollector::collectDitInfoInternal, this, dirPath));
+    _threads->start(std::bind(&DirInfoCollector::collectDirInfoInternal, this, dirPath));
 }
 
 void DirInfoCollector::interrupt()
@@ -62,7 +63,7 @@ bool DirInfoCollector::isValidElement(const QString &dirPath) const
     return fileInfo.exists() && !fileInfo.fileName().startsWith('.');
 }
 
-void DirInfoCollector::collectDitInfoInternal(const QString &dirPath)
+void DirInfoCollector::collectDirInfoInternal(const QString &dirPath)
 {
     if (!isValidElement(dirPath))
         return;

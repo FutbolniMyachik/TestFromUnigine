@@ -25,7 +25,7 @@ public:
     ///  наличием обработки результата, отсутствием обработки директории по пути dirPath
     /// \return Информация об директориях
     ///
-    QMap<QString, int> collectDitInfo(const QString &dirPath);
+    QMap<QString, int> collectDirInfo(const QString &dirPath);
     ///
     /// \brief setMaxThreadCount Установить максимальное число потоков
     /// \param threadCount Число потоков
@@ -75,7 +75,7 @@ private:
     /// \note Отличается от collectDitInfo отсутствием дополнительной работы с потоками,
     ///  отсутствием обработки результата, наличием обработки директории по пути dirPath
     ///
-    void collectDitInfoInternal(const QString &dirPath);
+    void collectDirInfoInternal(const QString &dirPath);
 
     QMap<QString, int> _dirInfoMap; ///< Дерево хранящее информацию о директориях
     QThreadPool *_threads{nullptr}; ///< Потоки

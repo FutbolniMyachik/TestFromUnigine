@@ -28,7 +28,9 @@ MainWidget::MainWidget(QWidget *parent)
 
 void MainWidget::setCurrentDirFromDialog()
 {
-    const QString directoryPath = QFileDialog::getExistingDirectory(this, tr("Выбор директории для поиска"), _currentChoosedDir);
+    const QString directoryPath = QFileDialog::getExistingDirectory(this,
+                                                                    tr("Выбор директории для поиска"),
+                                                                    _currentChoosedDir);
     if (directoryPath.isEmpty())
         return;
     setCurrentDir(directoryPath);
@@ -54,10 +56,10 @@ void MainWidget::findMostCommonFileAndDirNames()
     timer.start();
     const QMap<QString, int> dirInfo = collectDirInfoInSeparateThread();
     progressDialog.setLabelText(tr("Поиск максимальных значений"));
-    const QList<QPair<QString, int>> result = DirInfoAnalyzer(dirInfo).getMostCommonNamesList(_countOfTableViewElemets);
-    updateTableWidget(result);
+    updateTableWidget(DirInfoAnalyzer(dirInfo).getMostCommonNamesList(_countOfTableViewElemets));
     progressDialog.hide();
-    QMessageBox::information(this, tr("Время расчета"), QTime(0, 0, 0).addMSecs(timer.elapsed()).toString("hh:mm:ss.zzz"));
+    QMessageBox::information(this, tr("Время расчета"),
+                             QTime(0, 0, 0).addMSecs(timer.elapsed()).toString("hh:mm:ss.zzz"));
 }
 
 int MainWidget::maxThreadCount() const
@@ -78,9 +80,11 @@ void MainWidget::makeGui()
 QHBoxLayout *MainWidget::makeControlLayout() const
 {
     QHBoxLayout *layout = new QHBoxLayout();
+
     QLabel *currentChoosedDirLabel = new QLabel;
     connect(this, &MainWidget::currentDirChanged, currentChoosedDirLabel, &QLabel::setText);
     layout->addWidget(currentChoosedDirLabel);
+
     const auto makeButton = [this, layout](const QString &title, const auto &slot) {
        QPushButton *button = new QPushButton(title);
        button->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
@@ -96,6 +100,8 @@ QHBoxLayout *MainWidget::makeControlLayout() const
 QVBoxLayout *MainWidget::makeChooseThreadCountLayout() const
 {
     QVBoxLayout *layout = new QVBoxLayout;
+    layout->addWidget(new QLabel(tr("Число потоков")));
+
     QComboBox *numberOfThreadComboBox = new QComboBox;
     for (int i = 1, itemCount = maxThreadCount(); i <= itemCount; ++i) {
         numberOfThreadComboBox->addItem(QString::number(i));
@@ -108,7 +114,6 @@ QVBoxLayout *MainWidget::makeChooseThreadCountLayout() const
         numberOfThreadComboBox->setCurrentIndex(threadCount - 1);
     });
     numberOfThreadComboBox->setCurrentIndex(_dirInfoCollector->maxThreadCount() - 1);
-    layout->addWidget(new QLabel(tr("Число потоков")));
     layout->addWidget(numberOfThreadComboBox);
     return layout;
 }
@@ -124,9 +129,9 @@ QTableWidget *MainWidget::makeTableWidget() const
 
 void MainWidget::configureProgressDialog(QProgressDialog *progressDialog)
 {
-    progressDialog->setLabelText(tr("Расчет"));
-    progressDialog->setWindowTitle(tr("Расчет"));
-    progressDialog->setMaximum(0);
+    progressDialog->setLabelText(tr("Поиск совпадений"));
+    progressDialog->setWindowTitle(tr("Поиск совпадений"));
+    progressDialog->setMaximum(0); // Количество шагов не определяется, поэтому бесконечный прогресс бар
     connect(progressDialog, &QProgressDialog::canceled, _dirInfoCollector, &DirInfoCollector::interrupt);
     connect(progressDialog, &QProgressDialog::canceled, progressDialog, [progressDialog]() {
         progressDialog->setLabelText(tr("Остановка"));
@@ -148,7 +153,8 @@ void MainWidget::updateTableWidget(const QList<QPair<QString, int> > &dataItems)
 QMap<QString, int> MainWidget::collectDirInfoInSeparateThread()
 {
     QFutureWatcher<QMap<QString, int>> watcher;
-    QFuture<QMap<QString, int>> future = QtConcurrent::run(std::bind(&DirInfoCollector::collectDitInfo, _dirInfoCollector, _currentChoosedDir));
+    QFuture<QMap<QString, int>> future = QtConcurrent::run(std::bind(&DirInfoCollector::collectDirInfo,
+                                                                     _dirInfoCollector, _currentChoosedDir));
     watcher.setFuture(future);
     QEventLoop eventLoop;
     connect(&watcher, &QFutureWatcher<QMap<QString, int>>::finished, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);

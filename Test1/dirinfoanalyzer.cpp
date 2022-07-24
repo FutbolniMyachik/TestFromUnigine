@@ -8,7 +8,8 @@ DirInfoAnalyzer::DirInfoAnalyzer()
 DirInfoAnalyzer::DirInfoAnalyzer(const QMap<QString, int> &data)
     : _data(toList(data))
 {
-    std::sort(_data.begin(), _data.end(), [](const QPair<QString, int> &value1, const QPair<QString, int> &value2) {
+    std::sort(_data.begin(), _data.end(),
+              [](const QPair<QString, int> &value1, const QPair<QString, int> &value2) {
         return value1.second > value2.second;
     });
 }
@@ -30,10 +31,8 @@ QList<QPair<QString, int> > DirInfoAnalyzer::toList(const QMap<QString, int> &so
 {
     QList<QPair<QString, int>> result;
     result.reserve(sourceValues.size());
-    int i = 0;
     for (const QString &name : sourceValues.keys()) {
         result.append({name, sourceValues.value(name)});
-        ++i;
     }
     return result;
 }
