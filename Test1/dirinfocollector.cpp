@@ -15,6 +15,10 @@ QMap<QString, int> DirInfoCollector::collectDitInfo(const QString &dirPath)
         handleDirInSeparateThread(file.filePath());
     }
     _threads->waitForDone();
+    if (_interrupt) {
+        _dirInfoMap.clear();
+        return {};
+    }
     QMap<QString, int> result;
     std::swap(result, _dirInfoMap);
     return result;
