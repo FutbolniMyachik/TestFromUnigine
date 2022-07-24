@@ -14,6 +14,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY Build)
 
 add_subdirectory(DirInfo)
+add_subdirectory(Unit-test)
 
 set(QT_DEPENDS Widgets)
 find_package(QT NAMES Qt5 COMPONENTS ${QT_DEPENDS} REQUIRED)
