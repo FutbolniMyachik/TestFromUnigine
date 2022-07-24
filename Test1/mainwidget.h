@@ -71,12 +71,17 @@ private:
     /// \param dataItems Данные
     ///
     void updateTableWidget(const QList<QPair<QString, int>> &dataItems);
+    ///
+    /// \brief collectDirInfoInSepareteThread Собрать информацию об директориях в отдельном потоке
+    /// \return Информация об директориях
+    ///
+    QMap<QString, int> collectDirInfoInSeparateThread();
 
     QString _currentChoosedDir; ///< Текущая директория, по которой будет собираться информация
     DirInfoCollector *_dirInfoCollector{nullptr}; ///< Сборщик информации
     QTableWidget *_tableWidget{nullptr}; ///< Таблица с информацией о файлах
     QSettings *_settings{nullptr}; ///< Настройки
-    int _countOfTableViewElemets = 10; ///< Число отображаемых строк в таблице
+    int _countOfTableViewElemets{10}; ///< Число отображаемых строк в таблице
 };
 
 #endif // MAINWIDGET_H

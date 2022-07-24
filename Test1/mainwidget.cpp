@@ -51,17 +51,11 @@ void MainWidget::findMostCommonFileAndDirNames()
 
     QElapsedTimer timer;
     timer.start();
-    QFutureWatcher<QMap<QString, int>> watcher;
-    QFuture<QMap<QString, int>> future = QtConcurrent::run(std::bind(&DirInfoCollector::collectDitInfo, _dirInfoCollector, _currentChoosedDir));
-    watcher.setFuture(future);
-    QEventLoop eventLoop;
-    connect(&watcher, &QFutureWatcher<QMap<QString, int>>::finished, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);
-    eventLoop.exec();
-
-    const QMap<QString, int> countOfTheSameNames = future.result();
+    const QMap<QString, int> dirInfo = collectDirInfoInSeparateThread();
     progressDialog.setLabelText(tr("Поиск максимальных значений"));
-    const QList<QPair<QString, int>>  result = _dirInfoCollector->getMostCommon(_countOfTableViewElemets, countOfTheSameNames);
+    const QList<QPair<QString, int>>  result = _dirInfoCollector->getMostCommon(_countOfTableViewElemets, dirInfo);
     updateTableWidget(result);
+    progressDialog.hide();
     QMessageBox::information(this, tr("Время расчета"), QTime(0, 0, 0).addMSecs(timer.elapsed()).toString("hh:mm:ss.zzz"));
 }
 
@@ -148,4 +142,15 @@ void MainWidget::updateTableWidget(const QList<QPair<QString, int> > &dataItems)
         _tableWidget->setItem(currentRow, 0, new QTableWidgetItem(dataItem.first));
         _tableWidget->setItem(currentRow, 1, new QTableWidgetItem(QString::number(dataItem.second)));
     }
+}
+
+QMap<QString, int> MainWidget::collectDirInfoInSeparateThread()
+{
+    QFutureWatcher<QMap<QString, int>> watcher;
+    QFuture<QMap<QString, int>> future = QtConcurrent::run(std::bind(&DirInfoCollector::collectDitInfo, _dirInfoCollector, _currentChoosedDir));
+    watcher.setFuture(future);
+    QEventLoop eventLoop;
+    connect(&watcher, &QFutureWatcher<QMap<QString, int>>::finished, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);
+    eventLoop.exec();
+    return future.result();
 }
