@@ -17,25 +17,66 @@ public:
     explicit MainWidget(QWidget *parent = nullptr);
 
 signals:
+    ///
+    /// \brief currentDirChanged Сигнал, уведомляющий об изменении текущйе директории
+    /// \param currentDir Текущая директория
+    ///
     void currentDirChanged(const QString &currentDir);
 private slots:
+    ///
+    /// \brief setCurrentDirFromDialog Установить текущую директорию из диалога с пользователем
+    ///
     void setCurrentDirFromDialog();
+    ///
+    /// \brief setCurrentDir Установить текущую директорию
+    /// \param dirPath Путь до директории
+    ///
     void setCurrentDir(const QString &dirPath);
-    void findSameFilesCount();
+    ///
+    /// \brief findMostCommonFileNames Найти самые распространенные имена файлов и директорий
+    ///
+    void findMostCommonFileAndDirNames();
 private:
+    ///
+    /// \brief maxThreadCount Получить максимальное число потоков
+    /// \return Максимальное число потоков
+    ///
     int maxThreadCount() const;
+    ///
+    /// \brief makeGui Создать GUI
+    ///
     void makeGui();
+    ///
+    /// \brief makeControlLayout Создать панель для управления
+    /// \return
+    ///
     QHBoxLayout *makeControlLayout() const;
+    ///
+    /// \brief makeChooseThreadCountLayout Создать панель для управлением числом потоков
+    /// \return
+    ///
     QVBoxLayout *makeChooseThreadCountLayout() const;
+    ///
+    /// \brief makeTableWidget Создать виджет для отображения информации о файлах в виде таблицы
+    /// \return
+    ///
     QTableWidget *makeTableWidget() const;
+    ///
+    /// \brief configureProgressDialog Сконфигурировать диалог с прогрессом сбора информации
+    /// \param progressDialog Указатель на конфигурируемый диалог
+    ///
     void configureProgressDialog(QProgressDialog *progressDialog);
+    ///
+    /// \brief updateTableWidget Обновить значения в таблице
+    /// \param dataItems Данные
+    ///
     void updateTableWidget(const QList<QPair<QString, int>> &dataItems);
 
-    QString _currentChoosedDir;
-    DirInfoCollector *_dirAnalyzer{nullptr};
-    QTableWidget *_tableWidget{nullptr};
-    QSettings *_settings{nullptr};
-    int countOfViewElemets = 10;
+    QString _currentChoosedDir; ///< Текущая директория, по которой будет собираться информация
+    DirInfoCollector *_dirInfoCollector{nullptr}; ///< Сборщик информации
+    QTableWidget *_tableWidget{nullptr}; ///< Таблица с информацией о файлах
+    QSettings *_settings{nullptr}; ///< Настройки
+    int _countOfTableViewElemets = 10; ///< Число отображаемых строк в таблице
 };
 
 #endif // MAINWIDGET_H

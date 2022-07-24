@@ -18,7 +18,7 @@
 MainWidget::MainWidget(QWidget *parent)
     : QWidget{parent}
 {
-    _dirAnalyzer = new DirInfoCollector(this);
+    _dirInfoCollector = new DirInfoCollector(this);
     _settings = new QSettings("settings.ini", QSettings::IniFormat, this);
 
     makeGui();
@@ -42,7 +42,7 @@ void MainWidget::setCurrentDir(const QString &dirPath)
     emit currentDirChanged(_currentChoosedDir);
 }
 
-void MainWidget::findSameFilesCount()
+void MainWidget::findMostCommonFileAndDirNames()
 {
 
     QProgressDialog progressDialog(this);
@@ -52,7 +52,7 @@ void MainWidget::findSameFilesCount()
     QElapsedTimer timer;
     timer.start();
     QFutureWatcher<QMap<QString, int>> watcher;
-    QFuture<QMap<QString, int>> future = QtConcurrent::run(std::bind(&DirInfoCollector::collectDitInfo, _dirAnalyzer, _currentChoosedDir));
+    QFuture<QMap<QString, int>> future = QtConcurrent::run(std::bind(&DirInfoCollector::collectDitInfo, _dirInfoCollector, _currentChoosedDir));
     watcher.setFuture(future);
     QEventLoop eventLoop;
     connect(&watcher, &QFutureWatcher<QMap<QString, int>>::finished, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);
@@ -60,7 +60,7 @@ void MainWidget::findSameFilesCount()
 
     const QMap<QString, int> countOfTheSameNames = future.result();
     progressDialog.setLabelText(tr("Поиск максимальных значений"));
-    const QList<QPair<QString, int>>  result = _dirAnalyzer->getMostCommon(countOfViewElemets, countOfTheSameNames);
+    const QList<QPair<QString, int>>  result = _dirInfoCollector->getMostCommon(_countOfTableViewElemets, countOfTheSameNames);
     updateTableWidget(result);
     QMessageBox::information(this, tr("Время расчета"), QTime(0, 0, 0).addMSecs(timer.elapsed()).toString("hh:mm:ss.zzz"));
 }
@@ -93,7 +93,7 @@ QHBoxLayout *MainWidget::makeControlLayout() const
        layout->addWidget(button);
     };
     makeButton(tr("Выбрать директорию"), &MainWidget::setCurrentDirFromDialog);
-    makeButton(tr("Поиск совпадений"), &MainWidget::findSameFilesCount);
+    makeButton(tr("Поиск совпадений"), &MainWidget::findMostCommonFileAndDirNames);
     layout->addLayout(makeChooseThreadCountLayout());
     return layout;
 }
@@ -106,13 +106,13 @@ QVBoxLayout *MainWidget::makeChooseThreadCountLayout() const
         numberOfThreadComboBox->addItem(QString::number(i));
     }
     connect(numberOfThreadComboBox, qOverload<int>(&QComboBox::currentIndexChanged),
-            _dirAnalyzer, [this](const int currentIndex) {
-        _dirAnalyzer->setMaxThreadCount(currentIndex + 1);
+            _dirInfoCollector, [this](const int currentIndex) {
+        _dirInfoCollector->setMaxThreadCount(currentIndex + 1);
     });
-    connect(_dirAnalyzer, &DirInfoCollector::maxThreadCountChanged, numberOfThreadComboBox, [numberOfThreadComboBox](const int threadCount) {
+    connect(_dirInfoCollector, &DirInfoCollector::maxThreadCountChanged, numberOfThreadComboBox, [numberOfThreadComboBox](const int threadCount) {
         numberOfThreadComboBox->setCurrentIndex(threadCount - 1);
     });
-    numberOfThreadComboBox->setCurrentIndex(_dirAnalyzer->maxThreadCount() - 1);
+    numberOfThreadComboBox->setCurrentIndex(_dirInfoCollector->maxThreadCount() - 1);
     layout->addWidget(new QLabel(tr("Число потоков")));
     layout->addWidget(numberOfThreadComboBox);
     return layout;
@@ -132,7 +132,7 @@ void MainWidget::configureProgressDialog(QProgressDialog *progressDialog)
     progressDialog->setLabelText(tr("Расчет"));
     progressDialog->setWindowTitle(tr("Расчет"));
     progressDialog->setMaximum(0);
-    connect(progressDialog, &QProgressDialog::canceled, _dirAnalyzer, &DirInfoCollector::interrupt);
+    connect(progressDialog, &QProgressDialog::canceled, _dirInfoCollector, &DirInfoCollector::interrupt);
     connect(progressDialog, &QProgressDialog::canceled, progressDialog, [progressDialog]() {
         progressDialog->setLabelText(tr("Остановка"));
     });
