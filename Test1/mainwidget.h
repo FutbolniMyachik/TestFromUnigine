@@ -90,7 +90,7 @@ private:
     DirInfoCollector *_dirInfoCollector{nullptr}; ///< Сборщик информации
     QTableWidget *_tableWidget{nullptr}; ///< Таблица с информацией о файлах
     QSettings *_settings{nullptr}; ///< Настройки
-    int _countOfTableViewElemets{10}; ///< Число отображаемых строк в таблице
+    static constexpr int _countOfTableViewElemets{10}; ///< Число отображаемых строк в таблице
 };
 
 #endif // MAINWIDGET_H
