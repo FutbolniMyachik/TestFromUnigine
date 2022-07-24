@@ -1,6 +1,7 @@
 #include "dirinfocollector.h"
 
 #include <QThreadPool>
+#include <QDebug>
 
 DirInfoCollector::DirInfoCollector(QObject *parent) : QObject(parent)
 {
@@ -11,7 +12,7 @@ DirInfoCollector::DirInfoCollector(QObject *parent) : QObject(parent)
 QMap<QString, int> DirInfoCollector::collectDirInfo(const QString &dirPath)
 {
     _interrupt = false;
-    const QFileInfoList filesAndDirsNames = QDir(dirPath).entryInfoList();
+    const QFileInfoList filesAndDirsNames = dirsAndFilesAtDir(dirPath);
     for (const QFileInfo &file : filesAndDirsNames) {
         handleDirInSeparateThread(file.filePath());
     }
@@ -60,15 +61,20 @@ void DirInfoCollector::interrupt()
 bool DirInfoCollector::isValidElement(const QString &dirPath) const
 {
     const QFileInfo fileInfo(dirPath);
-    return fileInfo.exists() && !fileInfo.fileName().startsWith('.');
+    const QString fileName = fileInfo.fileName();
+    return fileInfo.exists() && fileName != "." && fileName != "..";
 }
 
 void DirInfoCollector::collectDirInfoInternal(const QString &dirPath)
 {
-    if (!isValidElement(dirPath))
-        return;
     incrementFileNameRepeatCount(QFileInfo(dirPath).fileName());
-    for (const QFileInfo &file : QDir(dirPath).entryInfoList()) {
+    const QFileInfoList filesAndDirsNames = dirsAndFilesAtDir(dirPath);
+    for (const QFileInfo &file : filesAndDirsNames) {
         handleDirInSeparateThread(file.filePath());
     }
+}
+
+QFileInfoList DirInfoCollector::dirsAndFilesAtDir(const QString &dirPath) const
+{
+    return QDir(dirPath).entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden);
 }

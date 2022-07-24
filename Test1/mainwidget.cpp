@@ -121,6 +121,7 @@ QVBoxLayout *MainWidget::makeChooseThreadCountLayout() const
 QTableWidget *MainWidget::makeTableWidget() const
 {
     QTableWidget *tableWidget = new QTableWidget;
+    tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     tableWidget->setColumnCount(2);
     tableWidget->setHorizontalHeaderLabels({tr("Имя"), tr("Количество повторений")});
     tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);

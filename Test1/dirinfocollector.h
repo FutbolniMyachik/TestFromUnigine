@@ -76,6 +76,12 @@ private:
     ///  отсутствием обработки результата, наличием обработки директории по пути dirPath
     ///
     void collectDirInfoInternal(const QString &dirPath);
+    ///
+    /// \brief dirsAndFilesAtDir Получить список файлов и директорий в заданной директории
+    /// \param dirPath Заданная директория
+    /// \return Список файлов и директорий
+    ///
+    QFileInfoList dirsAndFilesAtDir(const QString &dirPath) const;
 
     QMap<QString, int> _dirInfoMap; ///< Дерево хранящее информацию о директориях
     QThreadPool *_threads{nullptr}; ///< Потоки
