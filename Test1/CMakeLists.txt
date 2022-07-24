@@ -13,7 +13,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY Build)
 
-set(QT_DEPENDS Widgets Core)
+add_subdirectory(DirInfo)
+
+set(QT_DEPENDS Widgets)
 find_package(QT NAMES Qt5 COMPONENTS ${QT_DEPENDS} REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS ${QT_DEPENDS} REQUIRED)
 
@@ -24,3 +26,6 @@ add_executable(Test1 ${SOURCES})
 foreach(QT_DEPEND ${QT_DEPENDS})
     target_link_libraries(Test1 PRIVATE Qt${QT_VERSION_MAJOR}::${QT_DEPEND})
 endforeach()
+
+target_link_libraries(Test1 PRIVATE DirInfo)
+target_include_directories(Test1 PRIVATE DirInfo)
