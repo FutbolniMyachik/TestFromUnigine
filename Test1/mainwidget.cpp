@@ -1,6 +1,6 @@
 #include "mainwidget.h"
 
-#include "diranalyzer.h"
+#include "dirinfocollector.h"
 
 #include <QVBoxLayout>
 #include <QPushButton>
@@ -18,7 +18,7 @@
 MainWidget::MainWidget(QWidget *parent)
     : QWidget{parent}
 {
-    _dirAnalyzer = new DirAnalyzer(this);
+    _dirAnalyzer = new DirInfoCollector(this);
     _settings = new QSettings("settings.ini", QSettings::IniFormat, this);
 
     makeGui();
@@ -52,7 +52,7 @@ void MainWidget::findSameFilesCount()
     QElapsedTimer timer;
     timer.start();
     QFutureWatcher<QMap<QString, int>> watcher;
-    QFuture<QMap<QString, int>> future = QtConcurrent::run(std::bind(&DirAnalyzer::getCountOfTheSameNames, _dirAnalyzer, _currentChoosedDir));
+    QFuture<QMap<QString, int>> future = QtConcurrent::run(std::bind(&DirInfoCollector::collectDitInfo, _dirAnalyzer, _currentChoosedDir));
     watcher.setFuture(future);
     QEventLoop eventLoop;
     connect(&watcher, &QFutureWatcher<QMap<QString, int>>::finished, &eventLoop, &QEventLoop::quit, Qt::QueuedConnection);
@@ -107,12 +107,12 @@ QVBoxLayout *MainWidget::makeChooseThreadCountLayout() const
     }
     connect(numberOfThreadComboBox, qOverload<int>(&QComboBox::currentIndexChanged),
             _dirAnalyzer, [this](const int currentIndex) {
-        _dirAnalyzer->setThreadCount(currentIndex + 1);
+        _dirAnalyzer->setMaxThreadCount(currentIndex + 1);
     });
-    connect(_dirAnalyzer, &DirAnalyzer::threadCountChanged, numberOfThreadComboBox, [numberOfThreadComboBox](const int threadCount) {
+    connect(_dirAnalyzer, &DirInfoCollector::maxThreadCountChanged, numberOfThreadComboBox, [numberOfThreadComboBox](const int threadCount) {
         numberOfThreadComboBox->setCurrentIndex(threadCount - 1);
     });
-    numberOfThreadComboBox->setCurrentIndex(_dirAnalyzer->threadCount() - 1);
+    numberOfThreadComboBox->setCurrentIndex(_dirAnalyzer->maxThreadCount() - 1);
     layout->addWidget(new QLabel(tr("Число потоков")));
     layout->addWidget(numberOfThreadComboBox);
     return layout;
@@ -132,7 +132,7 @@ void MainWidget::configureProgressDialog(QProgressDialog *progressDialog)
     progressDialog->setLabelText(tr("Расчет"));
     progressDialog->setWindowTitle(tr("Расчет"));
     progressDialog->setMaximum(0);
-    connect(progressDialog, &QProgressDialog::canceled, _dirAnalyzer, &DirAnalyzer::interrupt);
+    connect(progressDialog, &QProgressDialog::canceled, _dirAnalyzer, &DirInfoCollector::interrupt);
     connect(progressDialog, &QProgressDialog::canceled, progressDialog, [progressDialog]() {
         progressDialog->setLabelText(tr("Остановка"));
     });

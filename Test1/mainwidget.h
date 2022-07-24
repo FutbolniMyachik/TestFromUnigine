@@ -5,7 +5,7 @@
 
 class QHBoxLayout;
 class QVBoxLayout;
-class DirAnalyzer;
+class DirInfoCollector;
 class QTableWidget;
 class QProgressDialog;
 class QSettings;
@@ -32,7 +32,7 @@ private:
     void updateTableWidget(const QList<QPair<QString, int>> &dataItems);
 
     QString _currentChoosedDir;
-    DirAnalyzer *_dirAnalyzer{nullptr};
+    DirInfoCollector *_dirAnalyzer{nullptr};
     QTableWidget *_tableWidget{nullptr};
     QSettings *_settings{nullptr};
     int countOfViewElemets = 10;

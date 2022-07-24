@@ -1,14 +1,14 @@
-#include "diranalyzer.h"
+#include "dirinfocollector.h"
 
 #include <QThreadPool>
 
-DirAnalyzer::DirAnalyzer(QObject *parent) : QObject(parent)
+DirInfoCollector::DirInfoCollector(QObject *parent) : QObject(parent)
 {
     _threads = new QThreadPool(this);
     _threads->setMaxThreadCount(1);
 }
 
-QList<QPair<QString, int>> DirAnalyzer::getMostCommon(const int count, const QMap<QString, int> &sourceValues) const
+QList<QPair<QString, int>> DirInfoCollector::getMostCommon(const int count, const QMap<QString, int> &sourceValues) const
 {
     QList<QPair<QString, int> > listOfResult = toList(sourceValues);
     std::sort(listOfResult.begin(), listOfResult.end(), [](const QPair<QString, int> &value1, const QPair<QString, int> &value2) {
@@ -25,67 +25,67 @@ QList<QPair<QString, int>> DirAnalyzer::getMostCommon(const int count, const QMa
     return listOfMostCommon;
 }
 
-QMap<QString, int> DirAnalyzer::getCountOfTheSameNames(const QString &startDir)
+QMap<QString, int> DirInfoCollector::collectDitInfo(const QString &dirPath)
 {
     _interrupt = false;
-    for (const QFileInfo &file : QDir(startDir).entryInfoList()) {
-        checkDirAsync(file.filePath());
+    for (const QFileInfo &file : QDir(dirPath).entryInfoList()) {
+        handleDirInSeparateThread(file.filePath());
     }
     _threads->waitForDone();
     QMap<QString, int> result;
-    std::swap(result, _result);
+    std::swap(result, _dirInfoMap);
     return result;
 }
 
-void DirAnalyzer::setThreadCount(const int threadCount)
+void DirInfoCollector::setMaxThreadCount(const int threadCount)
 {
-    if ((threadCount == this->threadCount()) || (threadCount < 1))
+    if ((threadCount == this->maxThreadCount()) || (threadCount < 1))
         return;
     _threads->setMaxThreadCount(threadCount);
-    emit threadCountChanged(threadCount);
+    emit maxThreadCountChanged(threadCount);
 }
 
-int DirAnalyzer::threadCount() const
+int DirInfoCollector::maxThreadCount() const
 {
     return _threads->maxThreadCount();
 }
 
-void DirAnalyzer::incrementFileRepeatCount(const QString &fileName)
+void DirInfoCollector::incrementFileNameRepeatCount(const QString &fileName)
 {
     _mutex.lock();
-    ++_result[fileName];
+    ++_dirInfoMap[fileName];
     _mutex.unlock();
 }
 
-void DirAnalyzer::checkDirAsync(const QString &dirPath)
+void DirInfoCollector::handleDirInSeparateThread(const QString &dirPath)
 {
     if (_interrupt)
         return;
-    _threads->start(std::bind(&DirAnalyzer::getCountOfTheSameNamesInternal, this, dirPath));
+    _threads->start(std::bind(&DirInfoCollector::collectDitInfoInternal, this, dirPath));
 }
 
-void DirAnalyzer::interrupt()
+void DirInfoCollector::interrupt()
 {
     _interrupt = true;
 }
 
-bool DirAnalyzer::isValidElement(const QString &dirPath) const
+bool DirInfoCollector::isValidElement(const QString &dirPath) const
 {
     const QFileInfo fileInfo(dirPath);
     return fileInfo.exists() && !fileInfo.fileName().startsWith('.');
 }
 
-void DirAnalyzer::getCountOfTheSameNamesInternal(const QString &startDir)
+void DirInfoCollector::collectDitInfoInternal(const QString &dirPath)
 {
-    if (!isValidElement(startDir))
+    if (!isValidElement(dirPath))
         return;
-    incrementFileRepeatCount(QFileInfo(startDir).fileName());
-    for (const QFileInfo &file : QDir(startDir).entryInfoList()) {
-        checkDirAsync(file.filePath());
+    incrementFileNameRepeatCount(QFileInfo(dirPath).fileName());
+    for (const QFileInfo &file : QDir(dirPath).entryInfoList()) {
+        handleDirInSeparateThread(file.filePath());
     }
 }
 
-QList<QPair<QString, int>> DirAnalyzer::toList(const QMap<QString, int> &sourceValues) const
+QList<QPair<QString, int>> DirInfoCollector::toList(const QMap<QString, int> &sourceValues) const
 {
     QList<QPair<QString, int>> result;
     result.reserve(sourceValues.size());
